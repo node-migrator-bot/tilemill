@@ -90,6 +90,12 @@ command.options['concurrency'] = {
     'default': 4
 };
 
+command.options['skipdupes'] = {
+    'title': 'skipdupes=[1|0]',
+    'description': 'Skip duplicate (solid) tiles entirely.',
+    'default': false
+};
+
 command.prototype.initialize = function(plugin, callback) {
     _(this).bindAll('error', 'put', 'complete');
 
@@ -334,6 +340,12 @@ command.prototype.tilelive = function (project, callback) {
     require('tilelive-mapnik').registerProtocols(tilelive);
 
     var opts = this.opts;
+
+    // Override #duplicate with #skip if skipdupes is enabled. 
+    if (opts.skipdupes) {
+        tilelive.Scheme.types[opts.scheme].prototype.duplicate = tilelive.Scheme.types[opts.scheme].prototype.skip;
+        console.warn('Sink will skip duplicate tiles...');
+    }
 
     // Try to load a job file if one was given and it exists.
     if (opts.job) {
